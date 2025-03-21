@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProfileController;
@@ -20,4 +21,3 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/user-profile', [AuthController::class, 'userProfile']);
     Route::put('/update-profile', [ProfileController::class, 'updateProfile']);
 });
-
