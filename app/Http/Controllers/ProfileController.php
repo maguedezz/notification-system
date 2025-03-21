@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use Log;
-use Illuminate\Http\Request;
-use Tymon\JWTAuth\Facades\JWTAuth;
+use App\Notifications\PasswordChangedNotification;
 use App\Notifications\UserProfileUpdatedNotification;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
+use Log;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class ProfileController extends Controller
 {
@@ -48,5 +51,29 @@ class ProfileController extends Controller
         $user->notify(new UserProfileUpdatedNotification($user));
 
         return response()->json(['message' => 'Profile updated successfully', 'changes' => $changes], 200);
+    }
+
+    public function changePassword(Request $request)
+    {
+        $user = JWTAuth::user(); // Get the authenticated user
+
+        // Validates input.
+        $validator = Validator::make($request->all(), [
+            'current_password' => 'required|string|min:6',
+            'new_password' => 'required|string|min:6|confirmed',
+        ]);
+        // Verifies current password is correct.
+        if (!Hash::check($request->current_password, $user->password)) {
+            return response()->json(['message' => 'Current password is incorrect'], 400);
+      }
+        // Hashes and saves the new password.
+
+        $user->password = Hash::make($request->new_password);
+        $user->save();
+
+        $user->notify(new PasswordChangedNotification($user));
+
+        // Responds with success or failure.
+        return response()->json(['message' => 'Password changed successfully'], 200);
     }
 }
